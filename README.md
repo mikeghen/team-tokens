@@ -1,6 +1,8 @@
 # Team Tokens
 Prediction Market Derivative Tracking Sports Teams' Performance.
 
+![Team Tokens](./TeamTokenSystem.png)
+
 # Problem
 - Prediction markets offer a way to financially benefit off of a sports teams performance
 - As an individual, its difficult to capture the gain if your team has a good season.
