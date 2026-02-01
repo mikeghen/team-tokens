@@ -14,3 +14,10 @@
 ## Vault & Betting Mathmatics
 - Vaults hold a balance and will automatically bet 2% of their balance on each game
  
+## Actions
+- Holder
+  - Deposit, amount of usdc
+  - Withdraw, number of shares
+- Searcher
+  - Buy, number of no tokens
+  - Redeem, number of no tokens
