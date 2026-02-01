@@ -23,6 +23,7 @@ Prediction Market Derivative Tracking Sports Teams' Performance.
   - In the short term: The derivative goes up if the team wins and down if the team loses.
   - In the long term: The derivative goes up if the team has an unexpectedly good season.
 - Intent + Searcher architecture to avoid direct Prediction Market integrations.
+- Automated betting strategy using DCA to enter positions
 
 # Project Structure
 - Contracts: Solidity contracts manage deposit, withdraw, share price, automated bets through selling no tokens, price feed.
