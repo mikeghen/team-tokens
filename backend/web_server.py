@@ -33,8 +33,15 @@ def api_games():
 def api_price_history(game_id):
     """API endpoint to get price history for a specific game."""
     try:
+        from database import calculate_48h_average_price
+        
         history = get_price_history(game_id)
-        return jsonify(history)
+        avg_48h = calculate_48h_average_price(game_id)
+        
+        return jsonify({
+            "history": history,
+            "avg_48h_price": avg_48h
+        })
     except Exception as e:
         logger.error(f"Error fetching price history: {e}")
         return jsonify({"error": str(e)}), 500

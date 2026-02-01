@@ -181,6 +181,80 @@ def get_price_history(game_id: int) -> List[Dict[str, Any]]:
     return history
 
 
+def calculate_48h_average_price(game_id: int) -> float:
+    """Calculate the average price in the 48 hours leading up to game start.
+    
+    Args:
+        game_id: Game ID
+        
+    Returns:
+        Average price in the 48 hours before game start, or None if insufficient data
+    """
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    # Get game info
+    cursor.execute("""
+        SELECT slug, game_start_utc FROM games WHERE id = ?
+    """, (game_id,))
+    game_row = cursor.fetchone()
+    if not game_row:
+        conn.close()
+        return None
+    
+    slug = game_row['slug']
+    game_start_utc = game_row['game_start_utc']
+    # Parse game_start_utc which has format: 2025-10-22T23:30:00Z
+    game_start_dt = datetime.fromisoformat(game_start_utc.replace('Z', '+00:00'))
+    
+    # Parse slug to determine if we need to invert prices
+    parts = slug.split('-')
+    is_phi_away = len(parts) >= 3 and parts[2].lower() == 'phi'
+    
+    # Get all price history for this game
+    cursor.execute("""
+        SELECT timestamp_utc, price
+        FROM price_history
+        WHERE game_id = ?
+        ORDER BY timestamp_utc ASC
+    """, (game_id,))
+    
+    prices_in_window = []
+    for row in cursor.fetchall():
+        timestamp_utc = row['timestamp_utc']
+        price = row['price']
+        
+        # Parse timestamp which has format: 2025-10-21 00:00:15 (no timezone)
+        # Treat as UTC
+        if 'T' in timestamp_utc:
+            # ISO format with potential Z
+            timestamp_dt = datetime.fromisoformat(timestamp_utc.replace('Z', '+00:00'))
+        else:
+            # Space-separated format, assume UTC
+            timestamp_dt = datetime.strptime(timestamp_utc, '%Y-%m-%d %H:%M:%S')
+            # Make timezone-aware (UTC)
+            from datetime import timezone
+            timestamp_dt = timestamp_dt.replace(tzinfo=timezone.utc)
+        
+        # Calculate hours before game start
+        hours_before_game = (game_start_dt - timestamp_dt).total_seconds() / 3600
+        
+        # Include prices from 48 hours to 0 hours before game start
+        if 0 <= hours_before_game <= 48:
+            # Invert price if PHI is away team
+            if is_phi_away:
+                price = 100.0 - price
+            prices_in_window.append(price)
+    
+    conn.close()
+    
+    if prices_in_window:
+        return sum(prices_in_window) / len(prices_in_window)
+    else:
+        return None
+
+
 if __name__ == "__main__":
     # Initialize and load data
     logging.basicConfig(level=logging.INFO)

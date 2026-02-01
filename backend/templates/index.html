@@ -115,6 +115,39 @@
             color: #666;
             margin: 4px 0;
         }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        
+        .metric-subtitle {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
@@ -133,6 +166,14 @@
             <h3 id="gameTitle"></h3>
             <p id="gameDate"></p>
             <p id="dataPoints"></p>
+        </div>
+        
+        <div id="metrics" class="metrics" style="display: none;">
+            <div class="metric-card">
+                <div class="metric-label">48-Hour Average Price</div>
+                <div class="metric-value" id="avg48hValue">--</div>
+                <div class="metric-subtitle">Entry price for experiment</div>
+            </div>
         </div>
         
         <div class="chart-container">
@@ -198,6 +239,7 @@
             
             if (!gameId) {
                 hideGameInfo();
+                hideMetrics();
                 if (chart) {
                     chart.destroy();
                     chart = null;
@@ -209,14 +251,19 @@
                 const response = await fetch(`/api/price-history/${gameId}`);
                 if (!response.ok) throw new Error('Failed to load price history');
                 
-                const history = await response.json();
+                const data = await response.json();
+                const history = data.history;
+                const avg48h = data.avg_48h_price;
                 
                 // Update game info
                 const selectedOption = event.target.selectedOptions[0];
                 showGameInfo(selectedOption.textContent, selectedOption.dataset.gameDate, history.length);
                 
+                // Update metrics
+                showMetrics(avg48h);
+                
                 // Update chart
-                updateChart(history);
+                updateChart(history, avg48h);
                 
             } catch (error) {
                 showError('Failed to load price history: ' + error.message);
@@ -249,8 +296,27 @@
             document.getElementById('gameInfo').classList.remove('show');
         }
         
+        // Show metrics
+        function showMetrics(avg48h) {
+            const metricsDiv = document.getElementById('metrics');
+            const avg48hValue = document.getElementById('avg48hValue');
+            
+            if (avg48h !== null && avg48h !== undefined) {
+                avg48hValue.textContent = avg48h.toFixed(2) + '%';
+                metricsDiv.style.display = 'grid';
+            } else {
+                avg48hValue.textContent = 'N/A';
+                metricsDiv.style.display = 'grid';
+            }
+        }
+        
+        // Hide metrics
+        function hideMetrics() {
+            document.getElementById('metrics').style.display = 'none';
+        }
+        
         // Update chart with new data
-        function updateChart(history) {
+        function updateChart(history, avg48h) {
             const timestamps = history.map(h => h.timestamp_utc);
             const prices = history.map(h => h.price);
             
@@ -260,24 +326,42 @@
                 chart.destroy();
             }
             
+            // Create datasets
+            const datasets = [{
+                label: 'Market Price (%)',
+                data: prices,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+                pointBackgroundColor: '#667eea',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }];
+            
+            // Add 48h average line if available
+            if (avg48h !== null && avg48h !== undefined) {
+                datasets.push({
+                    label: '48h Avg Entry Price',
+                    data: Array(timestamps.length).fill(avg48h),
+                    borderColor: '#ff6b6b',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    fill: false,
+                    pointRadius: 0,
+                    pointHoverRadius: 0
+                });
+            }
+            
             chart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: timestamps,
-                    datasets: [{
-                        label: 'Market Price (%)',
-                        data: prices,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointHoverRadius: 6,
-                        pointBackgroundColor: '#667eea',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2
-                    }]
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
