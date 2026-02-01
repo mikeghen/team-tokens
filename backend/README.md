@@ -56,6 +56,10 @@ Each CSV contains:
 - `time`: Timestamp in `YYYY-MM-DD HH:MM:SS` format
 - `price`: Market price as percentage (0-100)
 
+In addition, a consolidated file is created for easier analysis:
+- `price_history_all.csv` containing all games with columns:
+   `game_date`, `slug`, `game_start_utc`, `token_id`, `timestamp_utc`, `price`, `fidelity_minutes`
+
 ## Configuration
 
 Edit `config.py` to customize:

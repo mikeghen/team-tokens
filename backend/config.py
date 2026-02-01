@@ -10,11 +10,12 @@ CLOB_API_BASE = "https://clob.polymarket.com"
 
 # Extraction Settings
 PRICE_WINDOW_HOURS_BEFORE = 48
-PRICE_WINDOW_HOURS_AFTER = 12
+PRICE_WINDOW_HOURS_AFTER = 24
 PRICE_FIDELITY = 60  # Hourly resolution
 
 # File Settings
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "price_history")
+CONSOLIDATED_FILENAME = "price_history_all.csv"
 
 # Logging
 LOG_LEVEL = logging.DEBUG

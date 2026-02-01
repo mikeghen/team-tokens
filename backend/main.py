@@ -42,6 +42,13 @@ def run_extraction():
         if history:
             game_date = game['start_iso'][:10]
             writer.write_price_history(slug, game_date, history)
+            writer.write_consolidated_history(
+                slug=slug,
+                game_date=game_date,
+                game_start_iso=game['start_iso'],
+                token_id=token_id,
+                history=history
+            )
         else:
             logger.warning("No price history found", extra={"slug": slug, "token_id": token_id})
         

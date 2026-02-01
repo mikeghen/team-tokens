@@ -7,7 +7,7 @@ import logging
 from datetime import datetime
 from typing import List, Dict, Any
 
-from config import OUTPUT_DIR
+from config import OUTPUT_DIR, CONSOLIDATED_FILENAME, PRICE_FIDELITY
 
 logger = logging.getLogger(__name__)
 
@@ -76,4 +76,57 @@ class PriceHistoryWriter:
                 })
         
         logger.info("Saved history CSV", extra={"file": filepath, "points": len(history)})
+        return filepath
+
+    def write_consolidated_history(
+        self,
+        slug: str,
+        game_date: str,
+        game_start_iso: str,
+        token_id: str,
+        history: List[Dict[str, Any]]
+    ) -> str:
+        """Append price history to a consolidated CSV file.
+        
+        Args:
+            slug: Market slug identifier
+            game_date: Game date string (YYYY-MM-DD)
+            game_start_iso: Game start time in ISO format (UTC)
+            token_id: Market token ID
+            history: List of price history entries with 't' and 'p' keys
+            
+        Returns:
+            Path to consolidated file
+        """
+        filepath = os.path.join(self.output_dir, CONSOLIDATED_FILENAME)
+        file_exists = os.path.exists(filepath)
+
+        with open(filepath, 'a', newline='') as f:
+            fieldnames = [
+                'game_date',
+                'slug',
+                'game_start_utc',
+                'token_id',
+                'timestamp_utc',
+                'price',
+                'fidelity_minutes'
+            ]
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+
+            if not file_exists:
+                writer.writeheader()
+
+            for entry in history:
+                readable_time = datetime.utcfromtimestamp(entry['t']).strftime('%Y-%m-%d %H:%M:%S')
+                writer.writerow({
+                    'game_date': game_date,
+                    'slug': slug,
+                    'game_start_utc': game_start_iso,
+                    'token_id': token_id,
+                    'timestamp_utc': readable_time,
+                    'price': round(float(entry['p']) * 100, 2),
+                    'fidelity_minutes': PRICE_FIDELITY
+                })
+
+        logger.info("Appended consolidated history", extra={"file": filepath, "points": len(history)})
         return filepath
