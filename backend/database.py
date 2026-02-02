@@ -4,8 +4,8 @@ Database module for price history storage.
 import sqlite3
 import csv
 import logging
-from typing import List, Dict, Any
-from datetime import datetime
+from typing import List, Dict, Any, Optional
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -255,9 +255,179 @@ def calculate_48h_average_price(game_id: int) -> float:
         return None
 
 
+def get_final_price(game_id: int) -> Optional[float]:
+    """Get the final price (most recent price in the price history series).
+    
+    Args:
+        game_id: Game ID
+        
+    Returns:
+        Final price, or None if no data available
+    """
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    # Get game info
+    cursor.execute("""
+        SELECT slug FROM games WHERE id = ?
+    """, (game_id,))
+    game_row = cursor.fetchone()
+    if not game_row:
+        conn.close()
+        return None
+    
+    slug = game_row['slug']
+    
+    # Parse slug to determine if we need to invert prices
+    parts = slug.split('-')
+    is_phi_away = len(parts) >= 3 and parts[2].lower() == 'phi'
+    
+    # Get the most recent price (last in the series)
+    cursor.execute("""
+        SELECT price
+        FROM price_history
+        WHERE game_id = ?
+        ORDER BY timestamp_utc DESC
+        LIMIT 1
+    """, (game_id,))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        price = row['price']
+        # Invert price if PHI is away team
+        if is_phi_away:
+            price = 100.0 - price
+        
+        # Clean up final price values
+        if price > 95:
+            price = 100.0
+        elif price < 1:
+            price = 0.0
+        
+        return price
+    
+    return None
+
+
+def generate_game_analysis_dataset() -> List[Dict[str, Any]]:
+    """Generate analysis dataset with game details, avg price, final price, and ROI.
+    
+    Returns:
+        List of game analysis dictionaries
+    """
+    games = get_all_games()
+    analysis_data = []
+    
+    for game in games:
+        game_id = game['id']
+        avg_48h = calculate_48h_average_price(game_id)
+        final_price = get_final_price(game_id)
+        
+        # Calculate ROI
+        roi = None
+        if avg_48h is not None and final_price is not None:
+            # Assume binary outcome: final_price near 100 = win, near 0 = loss
+            # For simplicity, we'll use the actual final price as the outcome
+            # If game resolved (price at 0 or 100), calculate ROI
+            if final_price >= 99:
+                # Win: bought at avg_48h, value is now 100
+                roi = ((100 - avg_48h) / avg_48h) * 100
+            elif final_price <= 1:
+                # Loss: bought at avg_48h, value is now 0
+                roi = -100.0
+            else:
+                # Game not yet resolved or price in between
+                roi = ((final_price - avg_48h) / avg_48h) * 100
+        
+        analysis_data.append({
+            'game_id': game_id,
+            'game_date': game['game_date'],
+            'slug': game['slug'],
+            'game_start_utc': game['game_start_utc'],
+            'avg_48h_price': avg_48h,
+            'final_price': final_price,
+            'roi_percent': roi
+        })
+    
+    return analysis_data
+
+
+def save_analysis_dataset_to_csv(output_path: str = "game_analysis.csv"):
+    """Save game analysis dataset to CSV file.
+    
+    Args:
+        output_path: Path to output CSV file
+    """
+    analysis_data = generate_game_analysis_dataset()
+    
+    with open(output_path, 'w', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=[
+            'game_id', 'game_date', 'slug', 'game_start_utc',
+            'avg_48h_price', 'final_price', 'roi_percent'
+        ])
+        writer.writeheader()
+        writer.writerows(analysis_data)
+    
+    logger.info(f"Game analysis dataset saved to {output_path}")
+
+
+def run_backtest(initial_capital: float = 10000.0, bet_percentage: float = 0.02) -> List[Dict[str, Any]]:
+    """Run backtest simulation betting fixed percentage of bankroll on each game.
+    
+    Args:
+        initial_capital: Starting capital ($10,000 default)
+        bet_percentage: Percentage of bankroll to bet on each game (2% default)
+        
+    Returns:
+        List of backtest results with game info and running bankroll
+    """
+    analysis_data = generate_game_analysis_dataset()
+    
+    # Filter out games without ROI data
+    valid_games = [g for g in analysis_data if g['roi_percent'] is not None]
+    
+    # Sort by game date
+    valid_games.sort(key=lambda x: x['game_date'])
+    
+    bankroll = initial_capital
+    backtest_results = []
+    
+    for game in valid_games:
+        # Calculate bet size (2% of current bankroll)
+        bet_size = bankroll * bet_percentage
+        
+        # Calculate profit/loss based on ROI
+        roi_decimal = game['roi_percent'] / 100.0
+        profit_loss = bet_size * roi_decimal
+        
+        # Update bankroll
+        bankroll += profit_loss
+        
+        backtest_results.append({
+            'game_id': game['game_id'],
+            'game_date': game['game_date'],
+            'slug': game['slug'],
+            'avg_48h_price': game['avg_48h_price'],
+            'final_price': game['final_price'],
+            'roi_percent': game['roi_percent'],
+            'bet_size': bet_size,
+            'profit_loss': profit_loss,
+            'bankroll': bankroll
+        })
+    
+    return backtest_results
+
+
 if __name__ == "__main__":
     # Initialize and load data
     logging.basicConfig(level=logging.INFO)
     init_database()
     load_csv_to_database("price_history/price_history_all.csv")
     print("Database initialized and loaded successfully!")
+    
+    # Generate analysis dataset
+    save_analysis_dataset_to_csv()
+    print("Game analysis dataset generated!")

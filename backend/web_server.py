@@ -3,7 +3,7 @@ Web server for viewing price history charts.
 """
 from flask import Flask, render_template, jsonify
 import logging
-from database import get_all_games, get_price_history
+from database import get_all_games, get_price_history, generate_game_analysis_dataset, run_backtest
 
 app = Flask(__name__)
 
@@ -14,8 +14,14 @@ logger = logging.getLogger(__name__)
 
 @app.route('/')
 def index():
-    """Render the main page with chart interface."""
-    return render_template('index.html')
+    """Render the price history page."""
+    return render_template('price_history.html')
+
+
+@app.route('/backtest')
+def backtest_page():
+    """Render the backtest results page."""
+    return render_template('backtest.html')
 
 
 @app.route('/api/games')
@@ -44,6 +50,28 @@ def api_price_history(game_id):
         })
     except Exception as e:
         logger.error(f"Error fetching price history: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/game-analysis')
+def api_game_analysis():
+    """API endpoint to get game analysis data for all games."""
+    try:
+        analysis_data = generate_game_analysis_dataset()
+        return jsonify(analysis_data)
+    except Exception as e:
+        logger.error(f"Error fetching game analysis: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/backtest')
+def api_backtest():
+    """API endpoint to get backtest simulation results."""
+    try:
+        backtest_data = run_backtest(initial_capital=10000.0, bet_percentage=0.02)
+        return jsonify(backtest_data)
+    except Exception as e:
+        logger.error(f"Error running backtest: {e}")
         return jsonify({"error": str(e)}), 500
 
 

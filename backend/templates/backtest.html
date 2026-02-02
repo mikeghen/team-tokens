@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtest Results - Sixers Betting Strategy</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="/">Price History</a>
+            <a href="/backtest" class="active">Backtest Results</a>
+        </nav>
+        
+        <h1>💰 Backtest Results</h1>
+        <p class="subtitle">2% Betting Strategy Performance</p>
+        
+        <div class="backtest-stats">
+            <div class="stat-card">
+                <div class="stat-label">Initial Capital</div>
+                <div class="stat-value">$10,000</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Final Bankroll</div>
+                <div class="stat-value" id="finalBankroll">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Return</div>
+                <div class="stat-value" id="totalReturn">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Return %</div>
+                <div class="stat-value" id="returnPercent">--</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="backtestChart"></canvas>
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+</body>
+</html>

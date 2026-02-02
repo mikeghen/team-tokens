@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price History - Sixers Game Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="/" class="active">Price History</a>
+            <a href="/backtest">Backtest Results</a>
+        </nav>
+        
+        <h1>🏀 Philadelphia 76ers</h1>
+        <p class="subtitle">Market Price History from Polymarket</p>
+        
+        <div class="controls">
+            <label for="gameSelect">Select a Game:</label>
+            <select id="gameSelect">
+                <option value="">Loading games...</option>
+            </select>
+        </div>
+        
+        <div id="gameInfo" class="game-info">
+            <h3 id="gameTitle"></h3>
+            <p id="gameDate"></p>
+            <p id="dataPoints"></p>
+        </div>
+        
+        <div id="metrics" class="metrics" style="display: none;">
+            <div class="metric-card">
+                <div class="metric-label">48-Hour Average Price</div>
+                <div class="metric-value" id="avg48hValue">--</div>
+                <div class="metric-subtitle">Entry price for experiment</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="priceChart"></canvas>
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div class="analysis-section">
+            <h2>📊 Game Analysis & ROI</h2>
+            <div class="table-container">
+                <table id="analysisTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Matchup</th>
+                            <th>48h Avg Price</th>
+                            <th>Final Price</th>
+                            <th>ROI %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="analysisTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 20px;">Loading analysis data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+</body>
+</html>
