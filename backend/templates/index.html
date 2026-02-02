@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sixers Game Price History</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+        
+        .controls {
+            margin-bottom: 30px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        
+        select:hover {
+            border-color: #667eea;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 500px;
+            margin-top: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: 8px;
+            padding: 16px;
+            color: #c33;
+            margin-top: 20px;
+        }
+        
+        .game-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .game-info.show {
+            display: block;
+        }
+        
+        .game-info h3 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+        }
+        
+        .game-info p {
+            color: #666;
+            margin: 4px 0;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        
+        .metric-subtitle {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        .analysis-section {
+            margin-top: 40px;
+        }
+        
+        .analysis-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .backtest-section {
+            margin-top: 40px;
+        }
+        
+        .backtest-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .backtest-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stat-value.positive {
+            color: #28a745;
+        }
+        
+        .stat-value.negative {
+            color: #dc3545;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.9rem;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .positive-roi {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        .negative-roi {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        .neutral-roi {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏀 Philadelphia 76ers</h1>
+        <p class="subtitle">Market Price History from Polymarket</p>
+        
+        <div class="controls">
+            <label for="gameSelect">Select a Game:</label>
+            <select id="gameSelect">
+                <option value="">Loading games...</option>
+            </select>
+        </div>
+        
+        <div id="gameInfo" class="game-info">
+            <h3 id="gameTitle"></h3>
+            <p id="gameDate"></p>
+            <p id="dataPoints"></p>
+        </div>
+        
+        <div id="metrics" class="metrics" style="display: none;">
+            <div class="metric-card">
+                <div class="metric-label">48-Hour Average Price</div>
+                <div class="metric-value" id="avg48hValue">--</div>
+                <div class="metric-subtitle">Entry price for experiment</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="priceChart"></canvas>
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div class="backtest-section">
+            <h2>💰 Backtest Results - 2% Strategy</h2>
+            <div class="backtest-stats">
+                <div class="stat-card">
+                    <div class="stat-label">Initial Capital</div>
+                    <div class="stat-value">$10,000</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Final Bankroll</div>
+                    <div class="stat-value" id="finalBankroll">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Return</div>
+                    <div class="stat-value" id="totalReturn">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Return %</div>
+                    <div class="stat-value" id="returnPercent">--</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="backtestChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="analysis-section">
+            <h2>📊 Game Analysis & ROI</h2>
+            <div class="table-container">
+                <table id="analysisTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Matchup</th>
+                            <th>48h Avg Price</th>
+                            <th>Final Price</th>
+                            <th>ROI %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="analysisTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 20px;">Loading analysis data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chart = null;
+        let backtestChart = null;
+        let games = [];
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGames();
+            loadGameAnalysis();
+            loadBacktest();
+        });
+        
+        // Load all games
+        async function loadGames() {
+            try {
+                const response = await fetch('/api/games');
+                if (!response.ok) throw new Error('Failed to load games');
+                
+                games = await response.json();
+                
+                const select = document.getElementById('gameSelect');
+                select.innerHTML = '<option value="">-- Select a game --</option>';
+                
+                games.forEach(game => {
+                    const option = document.createElement('option');
+                    option.value = game.id;
+                    
+                    // Format: PHI vs BOS - Oct 22, 2025
+                    const slug = game.slug;
+                    const parts = slug.split('-');
+                    const homeTeam = parts[1] ? parts[1].toUpperCase() : '';
+                    const awayTeam = parts[2] ? parts[2].toUpperCase() : '';
+                    const date = new Date(game.game_date);
+                    const dateStr = date.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                    });
+                    
+                    option.textContent = `${homeTeam} vs ${awayTeam} - ${dateStr}`;
+                    option.dataset.slug = slug;
+                    option.dataset.gameDate = game.game_start_utc;
+                    
+                    select.appendChild(option);
+                });
+                
+                select.addEventListener('change', onGameSelected);
+                
+            } catch (error) {
+                showError('Failed to load games: ' + error.message);
+            }
+        }
+        
+        // Handle game selection
+        async function onGameSelected(event) {
+            const gameId = event.target.value;
+            
+            if (!gameId) {
+                hideGameInfo();
+                hideMetrics();
+                if (chart) {
+                    chart.destroy();
+                    chart = null;
+                }
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/price-history/${gameId}`);
+                if (!response.ok) throw new Error('Failed to load price history');
+                
+                const data = await response.json();
+                const history = data.history;
+                const avg48h = data.avg_48h_price;
+                
+                // Update game info
+                const selectedOption = event.target.selectedOptions[0];
+                showGameInfo(selectedOption.textContent, selectedOption.dataset.gameDate, history.length);
+                
+                // Update metrics
+                showMetrics(avg48h);
+                
+                // Update chart
+                updateChart(history, avg48h);
+                
+            } catch (error) {
+                showError('Failed to load price history: ' + error.message);
+            }
+        }
+        
+        // Show game information
+        function showGameInfo(title, gameDate, dataPoints) {
+            const gameInfo = document.getElementById('gameInfo');
+            const gameStartDate = new Date(gameDate);
+            const dateStr = gameStartDate.toLocaleString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZoneName: 'short'
+            });
+            
+            document.getElementById('gameTitle').textContent = title;
+            document.getElementById('gameDate').textContent = `Game Time: ${dateStr}`;
+            document.getElementById('dataPoints').textContent = `Data Points: ${dataPoints}`;
+            
+            gameInfo.classList.add('show');
+        }
+        
+        // Hide game information
+        function hideGameInfo() {
+            document.getElementById('gameInfo').classList.remove('show');
+        }
+        
+        // Show metrics
+        function showMetrics(avg48h) {
+            const metricsDiv = document.getElementById('metrics');
+            const avg48hValue = document.getElementById('avg48hValue');
+            
+            if (avg48h !== null && avg48h !== undefined) {
+                avg48hValue.textContent = avg48h.toFixed(2) + '%';
+                metricsDiv.style.display = 'grid';
+            } else {
+                avg48hValue.textContent = 'N/A';
+                metricsDiv.style.display = 'grid';
+            }
+        }
+        
+        // Hide metrics
+        function hideMetrics() {
+            document.getElementById('metrics').style.display = 'none';
+        }
+        
+        // Update chart with new data
+        function updateChart(history, avg48h) {
+            const timestamps = history.map(h => h.timestamp_utc);
+            const prices = history.map(h => h.price);
+            
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            // Create datasets
+            const datasets = [{
+                label: 'Market Price (%)',
+                data: prices,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+                pointBackgroundColor: '#667eea',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }];
+            
+            // Add 48h average line if available
+            if (avg48h !== null && avg48h !== undefined) {
+                datasets.push({
+                    label: '48h Avg Entry Price',
+                    data: Array(timestamps.length).fill(avg48h),
+                    borderColor: '#ff6b6b',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    fill: false,
+                    pointRadius: 0,
+                    pointHoverRadius: 0
+                });
+            }
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Price: ' + context.parsed.y.toFixed(2) + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Time (UTC)'
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 12
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Market Price (%)'
+                            },
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+        
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Load game analysis data
+        async function loadGameAnalysis() {
+            try {
+                const response = await fetch('/api/game-analysis');
+                if (!response.ok) throw new Error('Failed to load game analysis');
+                
+                const analysisData = await response.json();
+                displayAnalysisTable(analysisData);
+                
+            } catch (error) {
+                showError('Failed to load game analysis: ' + error.message);
+            }
+        }
+        
+        // Display analysis data in table
+        function displayAnalysisTable(data) {
+            const tbody = document.getElementById('analysisTableBody');
+            tbody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No data available</td></tr>';
+                return;
+            }
+            
+            data.forEach(game => {
+                const row = document.createElement('tr');
+                
+                // Parse game details
+                const date = new Date(game.game_date);
+                const dateStr = date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                });
+                
+                // Parse matchup from slug
+                const slug = game.slug;
+                const parts = slug.split('-');
+                const homeTeam = parts[1] ? parts[1].toUpperCase() : '';
+                const awayTeam = parts[2] ? parts[2].toUpperCase() : '';
+                const matchup = `${homeTeam} vs ${awayTeam}`;
+                
+                // Format prices and ROI
+                const avgPrice = game.avg_48h_price !== null ? game.avg_48h_price.toFixed(2) + '%' : 'N/A';
+                const finalPrice = game.final_price !== null ? game.final_price.toFixed(2) + '%' : 'N/A';
+                
+                let roiClass = 'neutral-roi';
+                let roiText = 'N/A';
+                if (game.roi_percent !== null) {
+                    const roi = game.roi_percent;
+                    roiClass = roi >= 0 ? 'positive-roi' : 'negative-roi';
+                    roiText = roi.toFixed(2) + '%';
+                }
+                
+                row.innerHTML = `
+                    <td>${dateStr}</td>
+                    <td>${matchup}</td>
+                    <td>${avgPrice}</td>
+                    <td>${finalPrice}</td>
+                    <td class="${roiClass}">${roiText}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Load backtest simulation data
+        async function loadBacktest() {
+            try {
+                const response = await fetch('/api/backtest');
+                if (!response.ok) throw new Error('Failed to load backtest data');
+                
+                const backtestData = await response.json();
+                displayBacktestResults(backtestData);
+                
+            } catch (error) {
+                showError('Failed to load backtest: ' + error.message);
+            }
+        }
+        
+        // Display backtest results
+        function displayBacktestResults(data) {
+            if (data.length === 0) return;
+            
+            // Calculate stats
+            const initialCapital = 10000;
+            const finalBankroll = data[data.length - 1].bankroll;
+            const totalReturn = finalBankroll - initialCapital;
+            const returnPercent = ((finalBankroll - initialCapital) / initialCapital) * 100;
+            
+            // Update stats
+            document.getElementById('finalBankroll').textContent = '$' + finalBankroll.toFixed(2);
+            document.getElementById('totalReturn').textContent = (totalReturn >= 0 ? '+' : '') + '$' + totalReturn.toFixed(2);
+            document.getElementById('returnPercent').textContent = (returnPercent >= 0 ? '+' : '') + returnPercent.toFixed(2) + '%';
+            
+            // Color code based on profit/loss
+            const returnPercentEl = document.getElementById('returnPercent');
+            const totalReturnEl = document.getElementById('totalReturn');
+            const finalBankrollEl = document.getElementById('finalBankroll');
+            
+            if (totalReturn >= 0) {
+                returnPercentEl.classList.add('positive');
+                totalReturnEl.classList.add('positive');
+                finalBankrollEl.classList.add('positive');
+            } else {
+                returnPercentEl.classList.add('negative');
+                totalReturnEl.classList.add('negative');
+                finalBankrollEl.classList.add('negative');
+            }
+            
+            // Create chart
+            const dates = data.map(d => {
+                const date = new Date(d.game_date);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            const bankrolls = data.map(d => d.bankroll);
+            
+            const ctx = document.getElementById('backtestChart').getContext('2d');
+            
+            if (backtestChart) {
+                backtestChart.destroy();
+            }
+            
+            backtestChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Bankroll ($)',
+                        data: bankrolls,
+                        borderColor: totalReturn >= 0 ? '#28a745' : '#dc3545',
+                        backgroundColor: totalReturn >= 0 ? 'rgba(40, 167, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: totalReturn >= 0 ? '#28a745' : '#dc3545',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }, {
+                        label: 'Initial Capital',
+                        data: Array(dates.length).fill(initialCapital),
+                        borderColor: '#666',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        borderDash: [10, 5],
+                        fill: false,
+                        pointRadius: 0,
+                        pointHoverRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': $' + context.parsed.y.toFixed(2);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Game Date'
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 15
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Bankroll ($)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
