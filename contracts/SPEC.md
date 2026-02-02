@@ -31,9 +31,11 @@
   - T-1-48 hours, slowly makes funds available to sell as NO tokens at market price - discounting factor
   - USDC Amount Available = total / 48 hours * (48 - hours remaining)
   - NO available = USDC Available * YES Price
+
 ## Asset Tracking
 - At any time, the fund holds the uninvested USDC plus some number of bets on games
 - Sum the mark to market value of the individual outstanding bets
+- Invests 2% of the current balance of USDC in the account, amounts for bets are excluded from the fund at the time they're placed (ie 48 hours before the event)
 
 ## Deposit and Withdraw Rate Limits
 - A deposit and withdraw rate limit is set to make adding and remove USDC safer and simpler
