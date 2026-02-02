@@ -24,6 +24,8 @@ Prediction Market Derivative Tracking Sports Teams' Performance.
   - In the long term: The derivative goes up if the team has an unexpectedly good season.
 - Intent + Searcher architecture to avoid direct Prediction Market integrations.
 - Automated betting strategy using DCA to enter positions
+- 2nd order effect, creates a sustainable, independant oracle for moneyline probability data onchain
+  - Each team token requires moneyline price data be posted onchain, once posted the data becomes publicly accessible to other contracts
 
 # Project Structure
 - Contracts: Solidity contracts manage deposit, withdraw, share price, automated bets through selling no tokens, price feed.
