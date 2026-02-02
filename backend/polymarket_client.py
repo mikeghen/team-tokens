@@ -14,6 +14,7 @@ from config import (
     PRICE_WINDOW_HOURS_BEFORE,
     PRICE_WINDOW_HOURS_AFTER,
     PRICE_FIDELITY,
+    log_game_data_error,
 )
 
 logger = logging.getLogger(__name__)
@@ -58,7 +59,10 @@ class PolymarketClient:
                     token_id = token_ids[0]
                     logger.info("Resolved token id", extra={"token_id": token_id})
                     return token_id
+                else:
+                    log_game_data_error(slug, "No token IDs in Gamma API response")
             else:
+                error_msg = f"Gamma API returned status {response.status_code}"
                 logger.error(
                     "Gamma API error",
                     extra={
@@ -67,8 +71,10 @@ class PolymarketClient:
                         "body": response.text[:500]
                     }
                 )
+                log_game_data_error(slug, error_msg)
         except Exception as e:
             logger.exception("Error fetching slug", extra={"slug": slug})
+            log_game_data_error(slug, f"Exception fetching slug: {str(e)}")
         
         return None
 

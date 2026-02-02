@@ -22,6 +22,7 @@ class PriceHistoryWriter:
             output_dir: Directory to write CSV files to
         """
         self.output_dir = output_dir
+        self.consolidated_filename = "price_history_all.csv"
         os.makedirs(self.output_dir, exist_ok=True)
 
     def build_filename(self, slug: str, game_date: str) -> str:
@@ -98,7 +99,7 @@ class PriceHistoryWriter:
         Returns:
             Path to consolidated file
         """
-        filepath = os.path.join(self.output_dir, CONSOLIDATED_FILENAME)
+        filepath = os.path.join(self.output_dir, self.consolidated_filename)
         file_exists = os.path.exists(filepath)
 
         with open(filepath, 'a', newline='') as f:

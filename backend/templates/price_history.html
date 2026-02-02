@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Price History - Sixers Game Analysis</title>
+    <title>Price History - NBA Game Analysis</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
@@ -14,10 +14,17 @@
             <a href="/backtest">Backtest Results</a>
         </nav>
         
-        <h1>🏀 Philadelphia 76ers</h1>
+        <h1 id="pageTitle">🏀 NBA Team Analysis</h1>
         <p class="subtitle">Market Price History from Polymarket</p>
         
         <div class="controls">
+            <label for="teamSelect">Select Team:</label>
+            <select id="teamSelect">
+                {% for abbrev, config in teams.items() %}
+                <option value="{{ abbrev }}">{{ config.name }}</option>
+                {% endfor %}
+            </select>
+            
             <label for="gameSelect">Select a Game:</label>
             <select id="gameSelect">
                 <option value="">Loading games...</option>

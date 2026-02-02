@@ -1,9 +1,20 @@
 let chart = null;
 let backtestChart = null;
 let games = [];
+let currentTeam = 'PHI';  // Default team
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
+    // Setup team selector if present
+    const teamSelect = document.getElementById('teamSelect');
+    if (teamSelect) {
+        currentTeam = teamSelect.value || 'PHI';
+        teamSelect.addEventListener('change', onTeamChanged);
+        
+        // Update page title with team name
+        updatePageTitle();
+    }
+    
     loadGames();
     if (document.getElementById('analysisTableBody')) {
         loadGameAnalysis();
@@ -13,10 +24,38 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Handle team selection change
+function onTeamChanged(event) {
+    currentTeam = event.target.value;
+    updatePageTitle();
+    
+    // Reload data for new team
+    loadGames();
+    
+    if (document.getElementById('analysisTableBody')) {
+        loadGameAnalysis();
+    }
+    if (document.getElementById('backtestChart')) {
+        loadBacktest();
+    }
+}
+
+// Update page title with team name
+function updatePageTitle() {
+    const teamSelect = document.getElementById('teamSelect');
+    const pageTitle = document.getElementById('pageTitle');
+    
+    if (teamSelect && pageTitle) {
+        const selectedOption = teamSelect.selectedOptions[0];
+        const teamName = selectedOption ? selectedOption.textContent : 'NBA Team Analysis';
+        pageTitle.textContent = `🏀 ${teamName}`;
+    }
+}
+
 // Load all games
 async function loadGames() {
     try {
-        const response = await fetch('/api/games');
+        const response = await fetch(`/api/games?team=${currentTeam}`);
         if (!response.ok) throw new Error('Failed to load games');
         
         games = await response.json();
@@ -71,7 +110,7 @@ async function onGameSelected(event) {
     }
     
     try {
-        const response = await fetch(`/api/price-history/${gameId}`);
+        const response = await fetch(`/api/price-history/${gameId}?team=${currentTeam}`);
         if (!response.ok) throw new Error('Failed to load price history');
         
         const data = await response.json();
@@ -260,7 +299,7 @@ function showError(message) {
 // Load game analysis data
 async function loadGameAnalysis() {
     try {
-        const response = await fetch('/api/game-analysis');
+        const response = await fetch(`/api/game-analysis?team=${currentTeam}`);
         if (!response.ok) throw new Error('Failed to load game analysis');
         
         const analysisData = await response.json();
@@ -328,11 +367,11 @@ function displayAnalysisTable(data) {
 // Load backtest simulation data
 async function loadBacktest() {
     try {
-        const response = await fetch('/api/backtest');
+        const response = await fetch(`/api/backtest-all-teams`);
         if (!response.ok) throw new Error('Failed to load backtest data');
         
-        const backtestData = await response.json();
-        displayBacktestResults(backtestData);
+        const allTeamsData = await response.json();
+        displayMultiTeamBacktestResults(allTeamsData);
         
     } catch (error) {
         showError('Failed to load backtest: ' + error.message);
@@ -458,6 +497,215 @@ function displayBacktestResults(data) {
             },
             interaction: {
                 mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        }
+    });
+}
+
+// Display multi-team backtest results
+function displayMultiTeamBacktestResults(allTeamsData) {
+    // Generate color palette for teams
+    const teamColors = {
+        'PHI': '#006BB6',
+        'BOS': '#007A33',
+        'DET': '#C8102E',
+        'MIA': '#98002E',
+        'IND': '#002D62',
+        'MIL': '#00471B',
+        'CHI': '#CE1141',
+        'ATL': '#E03A3E',
+        'CLE': '#860038',
+        'ORL': '#0077C0',
+        'CHA': '#1D1160',
+        'TOR': '#CE1141',
+        'BKN': '#000000',
+        'WAS': '#002B5C',
+        'NYK': '#006BB6',
+        'DAL': '#00538C',
+        'HOU': '#CE1141',
+        'POR': '#E03A3E',
+        'SAC': '#5A2D81',
+        'UTA': '#002B5C',
+        'LAL': '#552583',
+        'LAC': '#C8102E',
+        'GSW': '#1D428A'
+    };
+    
+    // Prepare datasets for chart
+    const datasets = [];
+    const tableRows = [];
+    
+    // Get all unique dates across all teams
+    const allDates = new Set();
+    Object.values(allTeamsData).forEach(teamData => {
+        teamData.backtest_data.forEach(game => {
+            allDates.add(game.game_date);
+        });
+    });
+    
+    const sortedDates = Array.from(allDates).sort();
+    const dateLabels = sortedDates.map(date => {
+        const d = new Date(date);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+    
+    // Create dataset for each team
+    Object.entries(allTeamsData).forEach(([teamAbbrev, teamData]) => {
+        const color = teamColors[teamAbbrev] || '#' + Math.floor(Math.random()*16777215).toString(16);
+        
+        // Create bankroll array aligned with sorted dates
+        const bankrollData = [];
+        let currentBankroll = 10000;
+        let dataIndex = 0;
+        
+        for (let date of sortedDates) {
+            // Find if this team has data for this date
+            const gameData = teamData.backtest_data.find(g => g.game_date === date);
+            if (gameData) {
+                currentBankroll = gameData.bankroll;
+                dataIndex++;
+            }
+            // Use null for dates where this team hasn't played yet, current bankroll after
+            bankrollData.push(dataIndex > 0 ? currentBankroll : null);
+        }
+        
+        datasets.push({
+            label: `${teamAbbrev} - ${teamData.team_name}`,
+            data: bankrollData,
+            borderColor: color,
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            fill: false,
+            tension: 0.1,
+            pointRadius: 2,
+            pointHoverRadius: 5,
+            pointBackgroundColor: color,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 1,
+            spanGaps: true
+        });
+        
+        // Prepare table row
+        const returnClass = teamData.total_return >= 0 ? 'positive-roi' : 'negative-roi';
+        tableRows.push({
+            team: `${teamAbbrev} - ${teamData.team_name}`,
+            games: teamData.games,
+            initialCapital: teamData.initial_capital,
+            finalBankroll: teamData.final_bankroll,
+            totalReturn: teamData.total_return,
+            returnPercent: teamData.return_percent,
+            returnClass: returnClass
+        });
+    });
+    
+    // Sort table rows by return percent (descending)
+    tableRows.sort((a, b) => b.returnPercent - a.returnPercent);
+    
+    // Update table
+    const tbody = document.getElementById('backtestSummaryBody');
+    if (tbody) {
+        tbody.innerHTML = '';
+        
+        if (tableRows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan=\"6\" style=\"text-align: center; padding: 20px;\">No data available</td></tr>';
+        } else {
+            tableRows.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${row.team}</strong></td>
+                    <td>${row.games}</td>
+                    <td>$${row.initialCapital.toFixed(2)}</td>
+                    <td>$${row.finalBankroll.toFixed(2)}</td>
+                    <td class=\"${row.returnClass}\">${row.totalReturn >= 0 ? '+' : ''}$${row.totalReturn.toFixed(2)}</td>
+                    <td class=\"${row.returnClass}\">${row.returnPercent >= 0 ? '+' : ''}${row.returnPercent.toFixed(2)}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    }
+    
+    // Add initial capital baseline
+    datasets.push({
+        label: 'Initial Capital',
+        data: Array(dateLabels.length).fill(10000),
+        borderColor: '#666',
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        borderDash: [10, 5],
+        fill: false,
+        pointRadius: 0,
+        pointHoverRadius: 0
+    });
+    
+    // Create chart
+    const ctx = document.getElementById('backtestChart').getContext('2d');
+    
+    if (backtestChart) {
+        backtestChart.destroy();
+    }
+    
+    backtestChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dateLabels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        boxWidth: 15,
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            if (context.parsed.y === null) return null;
+                            return context.dataset.label + ': $' + context.parsed.y.toFixed(2);
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Game Date'
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45,
+                        autoSkip: true,
+                        maxTicksLimit: 20
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Bankroll ($)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            },
+            interaction: {
+                mode: 'index',
                 axis: 'x',
                 intersect: false
             }
