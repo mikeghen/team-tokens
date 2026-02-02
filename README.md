@@ -17,6 +17,7 @@ Prediction Market Derivative Tracking Sports Teams' Performance.
 - A vault that accepts deposits of USDC and mints shares to the depositor
 - A betting strategy for how to bet on the teams games (e.g., always bet 2% of the vault)
 - A market market that sells NO tokens for each team game using intents
+- Deposit and withdraws rate limit to allow for some liquidity but structurally prevent large fast withdraws/deposits attempting to game the automated betting systems mathmatics
 
 # Contributions
 - New financial derivative that has the behavior:
