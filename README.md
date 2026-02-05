@@ -3,6 +3,11 @@ Prediction Market Derivative Tracking Sports Teams' Performance.
 
 ![Team Tokens](./TeamTokenSystem.png)
 
+# Back Test Results
+Team tokens uses a simple function for determining the fraction to bet on each game for a team. Team Token vaults will bet 2% of their funds on each game for a given team. In this way, a deriviate tracks the performance autonomously over the course of time in a simple to understand way. The backtest below shows how this would perform on this NBA 2025-26 season.
+
+![Back Test Results](./images/backtest_results.png)
+
 # Problem
 - Prediction markets offer a way to financially benefit off of a sports teams performance
 - As an individual, its difficult to capture the gain if your team has a good season.
@@ -11,6 +16,7 @@ Prediction Market Derivative Tracking Sports Teams' Performance.
   - Right sizing the bets you place so you don't run out of money
   - Not getting distracted by other markets promoted to you
   - Not getting addicted to sports betting
+
  
 # Solution
 - Automated Betting Pool that accepts deposits and automatically bets on a teams game
@@ -18,6 +24,9 @@ Prediction Market Derivative Tracking Sports Teams' Performance.
 - A betting strategy for how to bet on the teams games (e.g., always bet 2% of the vault)
 - A market market that sells NO tokens for each team game using intents
 - Deposit and withdraws rate limit to allow for some liquidity but structurally prevent large fast withdraws/deposits attempting to game the automated betting systems mathmatics
+
+# How its Made
+The Team Tokens protocol is composed of an Oracle and a Vault contract. The Oracle contract tracks the yes/no token price for all teams games. Vault contracts are created for each team. Each Vault consists of a ERC20 token, representing a share of the vaults assets, minted through deposits of USDC, burned for withdrawals; and ERC115 tokens, which represent NO tokens, these are sold at market price by the Vault for each of the team's games.
 
 # Contributions
 - New financial derivative that has the behavior:
