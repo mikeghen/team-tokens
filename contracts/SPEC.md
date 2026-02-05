@@ -42,3 +42,24 @@
 - We enforce deposits that grow the funds by a threshold per day amount (e.g., 2% per day)
 - Same for withdraw, though it would be smaller than the deposit threshold (e.g., 1% per day)
 - Prevents complicated rebalancing math, allow always withdraw from some amount of principal, prevent exploits that could completely drain the fund or skew the bet sizes
+
+## Formulas
+- Per game bet amount as a function of time to game
+
+## Interfaces
+
+- Oracle
+  - Register Publisher
+  - Register Game
+  - Record Game Data
+  - Get Game TWAP
+  - Claim Rewards
+
+- Vault
+  - Initialize: team info
+  - Traders:
+    - Deposit to get Vault Shares, optional deposit fee
+    - Withdraw after 24 hour timelock, optional withdraw fee
+  - Searchers:
+    - Execute Order, buy NO tokens for a team game
+    - Redeem Tokens, burn NO tokens to unlock 1 USDC per token if the team loses
