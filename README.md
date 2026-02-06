@@ -1,10 +1,10 @@
-# Team Tokens
+# Unexpected Sports Market
 Prediction Market Derivative Tracking Sports Teams' Performance.
 
-![Team Tokens](./TeamTokenSystem.png)
+![Unexpected Sports Market](./UnexpectedSportsMarket.png)
 
 # Back Test Results
-Team tokens uses a simple function for determining the fraction to bet on each game for a team. Team Token vaults will bet 2% of their funds on each game for a given team. In this way, a deriviate tracks the performance autonomously over the course of time in a simple to understand way. The backtest below shows how this would perform on this NBA 2025-26 season.
+Unexpected Sports uses a simple function for determining the fraction to bet on each game for a team. Unexpected Sports vaults will bet 2% of their funds on each game for a given team. In this way, a deriviate tracks the performance autonomously over the course of time in a simple to understand way. The backtest below shows how this would perform on this NBA 2025-26 season.
 
 ![Back Test Results](./images/backtest_results.png)
 
@@ -26,7 +26,7 @@ Team tokens uses a simple function for determining the fraction to bet on each g
 - Deposit and withdraws rate limit to allow for some liquidity but structurally prevent large fast withdraws/deposits attempting to game the automated betting systems mathmatics
 
 # How its Made
-The Team Tokens protocol is composed of an Oracle and a Vault contract. The Oracle contract tracks the yes/no token price for all teams games. Vault contracts are created for each team. Each Vault consists of a ERC20 token, representing a share of the vaults assets, minted through deposits of USDC, burned for withdrawals; and ERC115 tokens, which represent NO tokens, these are sold at market price by the Vault for each of the team's games.
+The Unexpected Sports Market protocol is composed of an Oracle and a Vault contract. The Oracle contract tracks the yes/no token price for all teams games. Vault contracts are created for each team. Each Vault consists of a ERC20 token, representing a share of the vaults assets, minted through deposits of USDC, burned for withdrawals; and ERC115 tokens, which represent NO tokens, these are sold at market price by the Vault for each of the team's games.
 
 # Contributions
 - New financial derivative that has the behavior:
@@ -35,9 +35,9 @@ The Team Tokens protocol is composed of an Oracle and a Vault contract. The Orac
 - Intent + Searcher architecture to avoid direct Prediction Market integrations.
 - Automated betting strategy using DCA to enter positions
 - 2nd order effect, creates a sustainable, independant oracle for moneyline probability data onchain
-  - Each team token requires moneyline price data be posted onchain, once posted the data becomes publicly accessible to other contracts
+  - Each team vault requires moneyline price data be posted onchain, once posted the data becomes publicly accessible to other contracts
 
 # Project Structure
 - Contracts: Solidity contracts manage deposit, withdraw, share price, automated bets through selling no tokens, price feed.
 - Oracle: Python application monitors prices and posts onchain.
-- Frontend: React application where investors can deposit USDC to get Team Token Shares for a team, searchers can buy NO tokens for games. 
+- Frontend: React application where investors can deposit USDC to get Unexpected Sports Shares for a team, searchers can buy NO tokens for games. 

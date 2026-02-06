@@ -1,7 +1,7 @@
-# Team Tokens Data Analysis
+# Unexpected Sports Market Data Analysis
 
 ## Historical Price Analysis
-- Review the hypothetical investment of 10K at the begining of the season using the Team Tokens fixed 2% betting strategy.
+- Review the hypothetical investment of 10K at the begining of the season using the Unexpected Sports fixed 2% betting strategy.
 - Data Needs:
     - For each nba team in the 2025-26 season:
         - For each game for that team:

@@ -1,4 +1,4 @@
-# Team Token Frontend
+# Unexpected Sports Market Frontend
 
 ## All Tokens View
 - Line chart shows the performance of each team over the course of the season using the 2% automated betting strategy

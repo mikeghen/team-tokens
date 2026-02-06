@@ -1,10 +1,10 @@
-# Team Tokens Smart Contracts
+# Unexpected Sports Market Smart Contracts
 
 ## Sports Oracle
 - Tracks the current YES/NO price for each game based on its game slug (e.g., nba-phi-atl-2026-01-31)
-- Provides prices to the Team Token contracts to settle games
+- Provides prices to the Unexpected Sports contracts to settle games
 
-## Team Token Vault
+## Unexpected Sports Vault
 - Tokenized vault that executes an automated betting strategy (e.g., bet 2% of the vault per game)
 - Manages deposits, withdraws, and share price tracking
 - Dual user contract:
