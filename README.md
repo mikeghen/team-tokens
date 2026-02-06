@@ -28,6 +28,9 @@ Unexpected Sports uses a simple function for determining the fraction to bet on 
 # How its Made
 The Unexpected Sports Market protocol is composed of an Oracle and a Vault contract. The Oracle contract tracks the yes/no token price for all teams games. Vault contracts are created for each team. Each Vault consists of a ERC20 token, representing a share of the vaults assets, minted through deposits of USDC, burned for withdrawals; and ERC115 tokens, which represent NO tokens, these are sold at market price by the Vault for each of the team's games.
 
+## Architecture
+![Architecture](./images/arch.png)
+
 # Contributions
 - New financial derivative that has the behavior:
   - In the short term: The derivative goes up if the team wins and down if the team loses.
