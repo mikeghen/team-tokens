@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   },
   teamName: {
     fontSize: fontSize.md,
-    color: colors.textSecondary,
+    color: colors.primaryLight,
     marginTop: spacing.xs,
   },
   sharePrice: {

@@ -53,26 +53,36 @@ Then press **i** to open in the iOS Simulator (requires Expo Go installed on the
 
 ## Configuration
 
-Before connecting to real contracts, update the following in `src/config/constants.ts`:
+Store secrets and credentials outside source code. Recommended approach (local development + Expo):
 
-```typescript
-// Replace with your deployed contract addresses
-export const CONTRACTS = {
-  ORACLE: "0x...",
-  TEAM_VAULT: "0x...",
-  USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // Mainnet USDC
-};
+1. Create a `.env` in the `frontend/` folder and add your secret (this project already ignores `.env`):
 
-// Get your project ID at https://cloud.reown.com
-export const REOWN_PROJECT_ID = "YOUR_REOWN_PROJECT_ID";
 ```
+REOWN_PROJECT_ID=your_reown_project_id_here
+```
+
+2. Add the variable to `app.config.js` so Expo makes it available at runtime (see `app.config.js` in the repo). This file reads `process.env.REOWN_PROJECT_ID` and puts it in `expoConfig.extra`.
+
+3. `src/config/constants.ts` has been updated to read the value from `expoConfig.extra` or `process.env` at runtime. It no longer contains the project ID in source control.
+
+4. Do NOT commit your `.env`. Use `.env.example` (included) to document required variables.
+
+### Production / CI
+
+- For EAS builds: use EAS secrets:
+
+```bash
+eas secret:create --name REOWN_PROJECT_ID --value <your_project_id>
+```
+
+- For GitHub Actions or other CI, use repository secrets and set `REOWN_PROJECT_ID` in the build environment.
 
 ### Getting a Reown Project ID
 
 1. Go to [cloud.reown.com](https://cloud.reown.com)
 2. Create a new project
 3. Copy the Project ID
-4. Paste it into `src/config/constants.ts`
+4. Add it to your local `.env` or to your build/CI secrets
 
 ### AppKit Setup
 

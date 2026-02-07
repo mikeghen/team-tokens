@@ -5,15 +5,21 @@ export const CONTRACTS = {
   USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" as `0x${string}`, // Mainnet USDC
 };
 
-// Reown (WalletConnect) project ID – get one at https://cloud.reown.com
-export const REOWN_PROJECT_ID = "YOUR_REOWN_PROJECT_ID";
+import Constants from "expo-constants";
+
+// Reown (WalletConnect) project ID – set via environment variable (do NOT commit secrets)
+// At runtime this reads from `app.config.js` extra values or `process.env.REOWN_PROJECT_ID`
+export const REOWN_PROJECT_ID =
+  (Constants.expoConfig?.extra?.REOWN_PROJECT_ID as string) ??
+  process.env.REOWN_PROJECT_ID ??
+  "";
 
 // Chain
 export const CHAIN_ID = 1; // Ethereum Mainnet
 
 // Team configuration
 export const TEAM_SYMBOL = "PHI";
-export const TEAM_NAME = "Philadelphia 76ers";
+export const TEAM_NAME = "Philadelphia Basketball Team";
 
 // Game slugs used in the tests
 export const GAME_SLUGS = [

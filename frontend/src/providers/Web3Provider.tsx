@@ -20,7 +20,7 @@ interface Web3ContextType {
 
   // Connections
   connect: () => Promise<void>;
-  disconnect: () => void;
+  disconnect: () => Promise<void>;
 
   // Contract instances (read-only, backed by a public provider)
   oracleContract: ethers.Contract | null;
@@ -39,7 +39,7 @@ const Web3Context = createContext<Web3ContextType>({
   provider: null,
   signer: null,
   connect: async () => {},
-  disconnect: () => {},
+  disconnect: async () => {},
   oracleContract: null,
   vaultContract: null,
   usdcContract: null,
@@ -100,6 +100,14 @@ export function Web3Provider({ children }: Props) {
     }
   }, [open]);
 
+  const handleDisconnect = useCallback(async () => {
+    try {
+      await disconnect();
+    } catch (err) {
+      console.error("AppKit disconnect failed:", err);
+    }
+  }, [disconnect]);
+
   useEffect(() => {
     async function updateSigner() {
       if (!appKitProvider || !isConnected) {
@@ -139,7 +147,7 @@ export function Web3Provider({ children }: Props) {
         provider,
         signer,
         connect,
-        disconnect,
+        disconnect: handleDisconnect,
         oracleContract,
         vaultContract,
         usdcContract,
