@@ -191,6 +191,18 @@ contract RecordGameData is OracleTest {
             IOracle.GameDataObservation({timestamp: 100, yesPrice: 50, noPrice: 50})
         );
     }
+
+    function test_OwnerCanRecordGameData() public {
+        vm.prank(owner);
+        oracle.recordGameData(
+            gameId,
+            IOracle.GameDataObservation({timestamp: 100, yesPrice: 40, noPrice: 60})
+        );
+
+        (uint256 yesPrice, uint256 noPrice) = oracle.getLatestPrice(gameId);
+        assertEq(yesPrice, 40);
+        assertEq(noPrice, 60);
+    }
 }
 
 contract GetGameData is OracleTest {
@@ -307,5 +319,44 @@ contract GetTwapPrice is OracleTest {
         bytes32 unknownGame = keccak256("missing");
         vm.expectRevert(abi.encodeWithSelector(Oracle.Oracle__GameNotFound.selector, unknownGame));
         oracle.getTwapPrice(unknownGame, 100, 200);
+    }
+
+    function test_RevertIf_NoObservations() public {
+        bytes32 emptyGame = keccak256("empty-game");
+        vm.prank(owner);
+        oracle.registerGame(
+            IOracle.GameData({
+                polymarket_slug: "empty-game",
+                homeTeam: DEFAULT_HOME,
+                awayTeam: DEFAULT_AWAY,
+                gameTime: DEFAULT_GAME_TIME,
+                homeWin: false,
+                observations: new IOracle.GameDataObservation[](0)
+            })
+        );
+
+        vm.expectRevert(Oracle.Oracle__NoObservations.selector);
+        oracle.getTwapPrice(emptyGame, 100, 200);
+    }
+
+    function test_RevertIf_FirstObservationAfterStartTime() public {
+        bytes32 lateGame = keccak256("late-game");
+        vm.prank(owner);
+        oracle.registerGame(
+            IOracle.GameData({
+                polymarket_slug: "late-game",
+                homeTeam: DEFAULT_HOME,
+                awayTeam: DEFAULT_AWAY,
+                gameTime: DEFAULT_GAME_TIME,
+                homeWin: false,
+                observations: new IOracle.GameDataObservation[](0)
+            })
+        );
+
+        // First observation at 150, which is after startTime 100 but before endTime 200
+        _recordObservation(lateGame, 150, 70, 30);
+
+        vm.expectRevert(Oracle.Oracle__InvalidTimeRange.selector);
+        oracle.getTwapPrice(lateGame, 100, 200);
     }
 }

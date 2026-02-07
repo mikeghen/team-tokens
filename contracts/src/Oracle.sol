@@ -165,53 +165,44 @@ contract Oracle is Ownable, IOracle {
         uint256 _currentYes;
         uint256 _currentNo;
         uint128 _currentTime = _startTime;
-        bool _hasStartPrice = false;
+        uint256 _yesWeighted;
+        uint256 _noWeighted;
+        uint256 _totalTime = uint256(_endTime - _startTime);
+        uint256 _index;
+        bool _hasStartPrice;
 
-        uint256 _index = 0;
-        for (; _index < _count; _index++) {
+        while (_index < _count && _gameData.observations[_index].timestamp < _endTime) {
             GameDataObservation storage _obs = _gameData.observations[_index];
+
+            // Observations at or before _startTime just set the starting price
             if (_obs.timestamp <= _startTime) {
                 _currentYes = _obs.yesPrice;
                 _currentNo = _obs.noPrice;
                 _hasStartPrice = true;
+                _index++;
                 continue;
             }
-            break;
+
+            // All observations past _startTime require a valid start price
+            if (!_hasStartPrice) break;
+
+            // Accumulate the segment from _currentTime to this observation
+            _yesWeighted += uint256(_obs.timestamp - _currentTime) * _currentYes;
+            _noWeighted += uint256(_obs.timestamp - _currentTime) * _currentNo;
+
+            _currentTime = _obs.timestamp;
+            _currentYes = _obs.yesPrice;
+            _currentNo = _obs.noPrice;
+            _index++;
         }
 
         if (!_hasStartPrice) {
             revert Oracle__InvalidTimeRange();
         }
 
-        uint256 _yesWeighted;
-        uint256 _noWeighted;
-        for (; _index < _count; _index++) {
-            GameDataObservation storage _obs = _gameData.observations[_index];
-            uint128 _obsTime = _obs.timestamp;
-
-            if (_obsTime >= _endTime) {
-                uint256 _duration = uint256(_endTime - _currentTime);
-                _yesWeighted += _duration * _currentYes;
-                _noWeighted += _duration * _currentNo;
-                uint256 _totalTime = uint256(_endTime - _startTime);
-                return (_yesWeighted / _totalTime, _noWeighted / _totalTime);
-            }
-
-            if (_obsTime > _currentTime) {
-                uint256 _duration = uint256(_obsTime - _currentTime);
-                _yesWeighted += _duration * _currentYes;
-                _noWeighted += _duration * _currentNo;
-                _currentTime = _obsTime;
-            }
-
-            _currentYes = _obs.yesPrice;
-            _currentNo = _obs.noPrice;
-        }
-
-        uint256 _duration = uint256(_endTime - _currentTime);
-        _yesWeighted += _duration * _currentYes;
-        _noWeighted += _duration * _currentNo;
-        uint256 _totalTime = uint256(_endTime - _startTime);
+        // Extend the last known price to _endTime
+        _yesWeighted += uint256(_endTime - _currentTime) * _currentYes;
+        _noWeighted += uint256(_endTime - _currentTime) * _currentNo;
         return (_yesWeighted / _totalTime, _noWeighted / _totalTime);
     }
 
