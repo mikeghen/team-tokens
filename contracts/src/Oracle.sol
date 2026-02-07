@@ -30,11 +30,7 @@ contract Oracle is Ownable, IOracle {
 
     /// @notice Emitted when a game is registered.
     event GameRegistered(
-        bytes32 indexed gameId,
-        string polymarketSlug,
-        uint128 gameTime,
-        string homeTeam,
-        string awayTeam
+        bytes32 indexed gameId, string polymarketSlug, uint128 gameTime, string homeTeam, string awayTeam
     );
 
     /// @notice Emitted when a new observation is recorded.
@@ -82,11 +78,7 @@ contract Oracle is Ownable, IOracle {
         registered[_gameId] = true;
 
         emit GameRegistered(
-            _gameId,
-            _gameData.polymarket_slug,
-            _gameData.gameTime,
-            _gameData.homeTeam,
-            _gameData.awayTeam
+            _gameId, _gameData.polymarket_slug, _gameData.gameTime, _gameData.homeTeam, _gameData.awayTeam
         );
 
         return uint256(_gameId);

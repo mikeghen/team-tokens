@@ -45,8 +45,7 @@ contract OracleTest is Test {
     function _recordObservation(bytes32 _gameId, uint128 _timestamp, uint256 _yesPrice, uint256 _noPrice) internal {
         vm.prank(reporter);
         oracle.recordGameData(
-            _gameId,
-            IOracle.GameDataObservation({timestamp: _timestamp, yesPrice: _yesPrice, noPrice: _noPrice})
+            _gameId, IOracle.GameDataObservation({timestamp: _timestamp, yesPrice: _yesPrice, noPrice: _noPrice})
         );
     }
 }
@@ -156,29 +155,20 @@ contract RecordGameData is OracleTest {
     function test_RevertIf_NotOwner() public {
         vm.prank(nonOwner);
         vm.expectRevert(abi.encodeWithSelector(Oracle.Oracle__UnauthorizedReporter.selector, nonOwner));
-        oracle.recordGameData(
-            gameId,
-            IOracle.GameDataObservation({timestamp: 100, yesPrice: 40, noPrice: 60})
-        );
+        oracle.recordGameData(gameId, IOracle.GameDataObservation({timestamp: 100, yesPrice: 40, noPrice: 60}));
     }
 
     function test_RevertIf_GameNotFound() public {
         bytes32 unknownGame = keccak256("unknown-game");
         vm.prank(owner);
         vm.expectRevert(abi.encodeWithSelector(Oracle.Oracle__GameNotFound.selector, unknownGame));
-        oracle.recordGameData(
-            unknownGame,
-            IOracle.GameDataObservation({timestamp: 100, yesPrice: 40, noPrice: 60})
-        );
+        oracle.recordGameData(unknownGame, IOracle.GameDataObservation({timestamp: 100, yesPrice: 40, noPrice: 60}));
     }
 
     function test_RevertIf_InvalidTimestamp() public {
         vm.prank(owner);
         vm.expectRevert(Oracle.Oracle__InvalidTimestamp.selector);
-        oracle.recordGameData(
-            gameId,
-            IOracle.GameDataObservation({timestamp: 0, yesPrice: 40, noPrice: 60})
-        );
+        oracle.recordGameData(gameId, IOracle.GameDataObservation({timestamp: 0, yesPrice: 40, noPrice: 60}));
     }
 
     function test_RevertIf_ObservationOutOfOrder() public {
@@ -186,18 +176,12 @@ contract RecordGameData is OracleTest {
 
         vm.prank(owner);
         vm.expectRevert(Oracle.Oracle__ObservationOutOfOrder.selector);
-        oracle.recordGameData(
-            gameId,
-            IOracle.GameDataObservation({timestamp: 100, yesPrice: 50, noPrice: 50})
-        );
+        oracle.recordGameData(gameId, IOracle.GameDataObservation({timestamp: 100, yesPrice: 50, noPrice: 50}));
     }
 
     function test_OwnerCanRecordGameData() public {
         vm.prank(owner);
-        oracle.recordGameData(
-            gameId,
-            IOracle.GameDataObservation({timestamp: 100, yesPrice: 40, noPrice: 60})
-        );
+        oracle.recordGameData(gameId, IOracle.GameDataObservation({timestamp: 100, yesPrice: 40, noPrice: 60}));
 
         (uint256 yesPrice, uint256 noPrice) = oracle.getLatestPrice(gameId);
         assertEq(yesPrice, 40);

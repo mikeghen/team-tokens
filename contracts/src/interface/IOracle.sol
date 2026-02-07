@@ -2,9 +2,9 @@
 pragma solidity ^0.8.13;
 
 /// @title Unexpected Sports Oracle Interface
-/// @dev This interface defines the structure and functions for an oracle that provides data about 
-/// sports games, specifically for use with the Unexpected Sports protocol. The oracle allows for 
-/// the registration of games and the recording of game data observations, such as market prices 
+/// @dev This interface defines the structure and functions for an oracle that provides data about
+/// sports games, specifically for use with the Unexpected Sports protocol. The oracle allows for
+/// the registration of games and the recording of game data observations, such as market prices
 /// at specific timestamps.
 interface Oracle {
     /// @notice Data specific to a game, such as the polymarket slug and the time of the game.
@@ -22,7 +22,7 @@ interface Oracle {
 
     /// @notice An observation of the game data at a specific time, including the price of the market at that time.
     struct GameDataObservation {
-        uint128 timestamp; 
+        uint128 timestamp;
         uint256 yesPrice;
         uint256 noPrice;
     }
@@ -47,5 +47,8 @@ interface Oracle {
     /// @param _endTime The end time of the period over which to calculate the TWAP.
     /// @return yesPrice The TWAP for the "Yes" outcome.
     /// @return noPrice The TWAP for the "No" outcome.
-    function getTwapPrice(bytes32 _gameId, uint128 _startTime, uint128 _endTime) external view returns (uint256 yesPrice, uint256 noPrice); 
+    function getTwapPrice(bytes32 _gameId, uint128 _startTime, uint128 _endTime)
+        external
+        view
+        returns (uint256 yesPrice, uint256 noPrice);
 }
