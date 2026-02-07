@@ -11,8 +11,13 @@ import {TeamVault} from "../src/TeamVault.sol";
 contract Seed is Script {
     error Seed__UnsupportedChain(uint256 chainId);
 
+    string internal constant SEED_CSV_PATH = "script/seed_data.csv";
+
     Oracle public oracle;
     TeamVault public teamVault;
+
+    mapping(bytes32 => bool) private _checkedGame;
+    mapping(bytes32 => bool) private _seedAllowed;
 
     function run() external {
         if (block.chainid != 31_337) {
@@ -31,58 +36,164 @@ contract Seed is Script {
 
         oracle.setReporter(deployer, true);
 
-        _seedGame("nba-phi-dal-2026-02-10", "PHI", "DAL", uint128(block.timestamp + 3 days), false, 4e17, 6e17);
-        _seedGame("nba-nyk-phi-2026-02-11", "NYK", "PHI", uint128(block.timestamp + 4 days), true, 45e16, 55e16);
-        _seedGame("nba-phi-bos-2026-02-12", "PHI", "BOS", uint128(block.timestamp + 5 days), false, 5e17, 5e17);
+        string memory csvData = vm.readFile(SEED_CSV_PATH);
+        _seedFromCsv(csvData);
 
         vm.stopBroadcast();
     }
 
-    function _seedGame(
-        string memory _slug,
-        string memory _homeTeam,
-        string memory _awayTeam,
-        uint128 _gameTime,
-        bool _homeWin,
-        uint256 _yesPrice,
-        uint256 _noPrice
-    ) internal {
-        bytes32 gameId = keccak256(bytes(_slug));
-        bool isOracleRegistered;
-        uint256 observationCount;
+    function _seedFromCsv(string memory csvData) internal {
+        bytes memory data = bytes(csvData);
+        uint256 lineStart = 0;
+        uint256 lineNum = 0;
 
-        try oracle.getGameData(gameId) returns (IOracle.GameData memory gameData) {
-            isOracleRegistered = true;
-            observationCount = gameData.observations.length;
-        } catch {}
+        for (uint256 i = 0; i <= data.length; i++) {
+            if (i == data.length || data[i] == 0x0a) {
+                if (i > lineStart) {
+                    string memory line = _slice(data, lineStart, i);
+                    if (bytes(line).length > 0) {
+                        if (lineNum > 0) {
+                            _processCsvLine(line);
+                        }
+                        lineNum++;
+                    }
+                }
+                lineStart = i + 1;
+            }
+        }
+    }
 
-        if (!isOracleRegistered) {
-            IOracle.GameDataObservation[] memory observations = new IOracle.GameDataObservation[](0);
-            IOracle.GameData memory gameData = IOracle.GameData({
-                polymarket_slug: _slug,
-                homeTeam: _homeTeam,
-                awayTeam: _awayTeam,
-                gameTime: _gameTime,
-                homeWin: _homeWin,
-                observations: observations
-            });
-            oracle.registerGame(gameData);
+    function _processCsvLine(string memory line) internal {
+        bytes memory lineBytes = bytes(line);
+        if (lineBytes.length == 0) return;
+        if (lineBytes[lineBytes.length - 1] == 0x0d) {
+            line = _slice(lineBytes, 0, lineBytes.length - 1);
+            lineBytes = bytes(line);
         }
 
-        if (!isOracleRegistered || observationCount == 0) {
-            uint128 baseTime = uint128(block.timestamp - 3 hours);
-            oracle.recordGameData(
-                gameId, IOracle.GameDataObservation({timestamp: baseTime, yesPrice: _yesPrice, noPrice: _noPrice})
-            );
-            oracle.recordGameData(
-                gameId,
-                IOracle.GameDataObservation({timestamp: baseTime + 1 hours, yesPrice: _yesPrice, noPrice: _noPrice})
-            );
+        uint256 idx = 0;
+        string memory slug;
+        string memory homeTeam;
+        string memory awayTeam;
+        uint256 gameTimeHoursAgo;
+        bool homeWin;
+        uint256 obsHoursAgo;
+        uint256 yesPrice;
+        uint256 noPrice;
+
+        (slug, idx) = _nextField(lineBytes, idx);
+        (homeTeam, idx) = _nextField(lineBytes, idx);
+        (awayTeam, idx) = _nextField(lineBytes, idx);
+        {
+            string memory gameTimeField;
+            (gameTimeField, idx) = _nextField(lineBytes, idx);
+            gameTimeHoursAgo = _parseUint(gameTimeField);
+        }
+        {
+            string memory homeWinField;
+            (homeWinField, idx) = _nextField(lineBytes, idx);
+            homeWin = _parseBool(homeWinField);
+        }
+        {
+            string memory obsHoursField;
+            (obsHoursField, idx) = _nextField(lineBytes, idx);
+            obsHoursAgo = _parseUint(obsHoursField);
+        }
+        {
+            string memory yesField;
+            (yesField, idx) = _nextField(lineBytes, idx);
+            yesPrice = _parseUint(yesField);
+        }
+        {
+            string memory noField;
+            (noField, idx) = _nextField(lineBytes, idx);
+            noPrice = _parseUint(noField);
         }
 
-        (, bool isRegistered,) = teamVault.gameInfo(gameId);
-        if (!isRegistered) {
-            teamVault.registerGame(gameId);
+        bytes32 gameId = keccak256(bytes(slug));
+        if (!_checkedGame[gameId]) {
+            _checkedGame[gameId] = true;
+            bool isOracleRegistered;
+            uint256 observationCount;
+
+            try oracle.getGameData(gameId) returns (IOracle.GameData memory gameData) {
+                isOracleRegistered = true;
+                observationCount = gameData.observations.length;
+            } catch {}
+
+            if (!isOracleRegistered) {
+                IOracle.GameDataObservation[] memory observations = new IOracle.GameDataObservation[](0);
+                IOracle.GameData memory gameData = IOracle.GameData({
+                    polymarket_slug: slug,
+                    homeTeam: homeTeam,
+                    awayTeam: awayTeam,
+                    gameTime: uint128(block.timestamp - (gameTimeHoursAgo * 1 hours)),
+                    homeWin: homeWin,
+                    observations: observations
+                });
+                oracle.registerGame(gameData);
+            }
+
+            _seedAllowed[gameId] = (!isOracleRegistered || observationCount == 0);
+
+            (, bool isRegistered,) = teamVault.gameInfo(gameId);
+            if (!isRegistered) {
+                teamVault.registerGame(gameId);
+            }
         }
+
+        if (!_seedAllowed[gameId]) {
+            return;
+        }
+
+        uint128 timestamp = uint128(block.timestamp - (obsHoursAgo * 1 hours));
+        oracle.recordGameData(
+            gameId, IOracle.GameDataObservation({timestamp: timestamp, yesPrice: yesPrice, noPrice: noPrice})
+        );
+    }
+
+    function _nextField(bytes memory lineBytes, uint256 start)
+        internal
+        pure
+        returns (string memory field, uint256 nextIndex)
+    {
+        uint256 i = start;
+        while (i < lineBytes.length && lineBytes[i] != 0x2c) {
+            i++;
+        }
+        field = _slice(lineBytes, start, i);
+        nextIndex = (i < lineBytes.length) ? i + 1 : i;
+    }
+
+    function _slice(bytes memory data, uint256 start, uint256 end) internal pure returns (string memory) {
+        if (end <= start) {
+            return "";
+        }
+        bytes memory out = new bytes(end - start);
+        for (uint256 i = 0; i < end - start; i++) {
+            out[i] = data[start + i];
+        }
+        return string(out);
+    }
+
+    function _parseUint(string memory s) internal pure returns (uint256 result) {
+        bytes memory b = bytes(s);
+        for (uint256 i = 0; i < b.length; i++) {
+            uint8 c = uint8(b[i]);
+            if (c >= 48 && c <= 57) {
+                result = result * 10 + (c - 48);
+            }
+        }
+    }
+
+    function _parseBool(string memory s) internal pure returns (bool) {
+        bytes memory b = bytes(s);
+        if (b.length == 1) {
+            return b[0] == 0x31;
+        }
+        if (b.length == 4) {
+            return (b[0] == 0x74 && b[1] == 0x72 && b[2] == 0x75 && b[3] == 0x65);
+        }
+        return false;
     }
 }

@@ -13,6 +13,7 @@ contract Deploy is Script {
 
     string internal constant TEAM_SYMBOL = "PHI";
     uint256 internal constant USDC_MINT_AMOUNT = 1_000_000e18;
+    string internal constant ENV_PATH = ".env";
 
     Oracle public oracle;
     TeamVault public teamVault;
@@ -38,6 +39,15 @@ contract Deploy is Script {
         usdc.mint(deployer, USDC_MINT_AMOUNT);
 
         teamVault = new TeamVault(deployer, address(oracle), address(usdc), TEAM_SYMBOL);
+
+        string memory envData = string.concat(
+            "ORACLE_ADDRESS=",
+            vm.toString(address(oracle)),
+            "\nTEAM_VAULT_ADDRESS=",
+            vm.toString(address(teamVault)),
+            "\n"
+        );
+        vm.writeFile(ENV_PATH, envData);
 
         vm.stopBroadcast();
     }
