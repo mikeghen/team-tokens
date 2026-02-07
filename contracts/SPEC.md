@@ -1,26 +1,58 @@
 # Unexpected Sports Market Smart Contracts
 
+## Architecture
+
+### Smart Contract Structure
+
+![Architecture](../images/arch.png)
+
+### Intent Based Prediction Market Integration
+Off chain searchers/market makers will buy NO tokens on games directory from the contract. In this way, we avoid directly integrating with any one prediction market.
+
+![Unexpected Sports Market](../images/UnexpectedSportsMarket.png)
+
+### Automated Betting Pool
+How it works:
+- Vaults are created per team and hold USDC plus open game positions.
+- Depositors receive ERC20 shares representing a pro-rata claim on vault assets.
+- The vault uses the Oracle’s YES/NO prices to sell NO tokens to searchers.
+- Each registered game triggers an automated 2% allocation at T-48 hours.
+- Orders are streamed over 48 hours to reduce slippage and price impact.
+- Purchased NO tokens are tracked per game and settle at game end.
+- Share price updates reflect USDC balance plus mark-to-market of open bets.
+- Rate limits cap daily deposit/withdraw changes to stabilize sizing.
+- Admin registers games; all other actions are permissionless.
+- Intent-based flow avoids direct prediction market integration.
+
 ## Sports Oracle
 - Tracks the current YES/NO price for each game based on its game slug (e.g., nba-phi-atl-2026-01-31)
 - Provides prices to the Unexpected Sports contracts to settle games
+- Interface name is `Oracle` (file: IOracle.sol)
+- Game registry
+  - `registerGame(polymarket_slug, gameTime)` returns `gameId`
+  - `getGameData(gameId)` returns `polymarket_slug` and `gameTime`
+- Observations
+  - `recordGameData(gameId, timestamp, yesPrice, noPrice)`
+  - `getTwapPrice(gameId, startTime, endTime)` returns TWAP for YES/NO
 
 ## Unexpected Sports Vault
 - Tokenized vault that executes an automated betting strategy (e.g., bet 2% of the vault per game)
 - Manages deposits, withdraws, and share price tracking
 - Dual user contract:
     - Token holders looking to participate in the automated betting
-    - Searchers looking to buy NO tokens from the vault
+  - Searchers/market makers looking to buy NO tokens from the vault
+- Admin can register games the vault will trade against
 
 ## Vault & Betting Mathmatics
 - Vaults hold a balance and will automatically bet 2% of their balance on each game
  
 ## Actions
 - Holder
-  - Deposit, amount of usdc
-  - Withdraw, number of shares
-- Searcher
-  - Buy, number of no tokens
-  - Redeem, number of no tokens
+  - Deposit, amount of USDC with a minimum share output
+  - Withdraw, number of shares with a minimum USDC output
+- Searcher/Market Maker
+  - Buy, amount of USDC to spend on NO with minimum share output
+  - Redeem, number of NO shares with minimum USDC output
 
 ## How to buy
 - 48 hours before the game time, the contract expresses its intent to buy
@@ -49,17 +81,18 @@
 ## Interfaces
 
 - Oracle
-  - Register Publisher
-  - Register Game
-  - Record Game Data
-  - Get Game TWAP
-  - Claim Rewards
+  - Register Game (slug, gameTime) -> gameId
+  - Record Game Data (gameId, timestamp, yesPrice, noPrice)
+  - Get Game Data (gameId -> slug, gameTime)
+  - Get Game TWAP (gameId, startTime, endTime)
 
 - Vault
-  - Initialize: team info
-  - Traders:
-    - Deposit to get Vault Shares, optional deposit fee
-    - Withdraw after 24 hour timelock, optional withdraw fee
-  - Searchers:
-    - Execute Order, buy NO tokens for a team game
-    - Redeem Tokens, burn NO tokens to unlock 1 USDC per token if the team loses
+  - Admin
+    - Register Game (gameId)
+    - Register Games (gameIds[])
+  - Traders
+    - Deposit (amount, minShares)
+    - Withdraw (shares, minAmount)
+  - Market Makers
+    - Buy (gameId, amount, isYes, minShares)
+    - Redeem (gameId, shares, minAmount)
