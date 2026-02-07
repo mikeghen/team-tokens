@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 /// @title Unexpected Sports Team Vault Interface
 interface ITeamVault {
-
     /// @notice GameWager tracks the vaults wager on each game
     /// @param usdcAmountForBet USDC amount escrowed for the bet
     /// @param noTokensSold NO Tokens sold for the bet, 1 USDC per 1 NO Token sold
@@ -14,8 +13,8 @@ interface ITeamVault {
         uint256 noTokensSold;
         uint256 averageNoPrice;
     }
-    /// mapping(bytes32 gameId => VaultWager) public vaultWagers);
 
+    /// mapping(bytes32 gameId => VaultWager) public vaultWagers);
 
     /// @notice MarketMakerWager tracks the market makers wager on each game
     struct MarketMakerWager {
@@ -45,5 +44,4 @@ interface ITeamVault {
     /// @notice getSharePrice returns the current price per share of the vault, calculated as total assets under management divided by total shares
     /// outstanding VaultWagers should be priced using the game's getLatestPrice from the oracle
     function getSharePrice() external view returns (uint256);
-
 }
