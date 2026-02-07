@@ -6,7 +6,7 @@ interface ITeamVault {
     // Game Life Cycle:
     // 1. Owner registers a game with the oracle and adds it to the vault
     // 2. Traders can deposit into the vault and receive shares
-    // 3. Owner checkpoints the game 72 hours before its start time to record the usdcAmountForBet
+    // 3. Owner checkpoints the game 48 hours before its start time to record the usdcAmountForBet
     // 4. Based on the amount to wager, we compute how many YES tokens we could buy at the current price (as long as its within a certain percentage of the getTwapPrice)
     // 5. Market Makers then buy NO tokens, 1 NO token is available for each YES token the vault will want to buy with the usdcAmountForBet.
     // 6. The game starts, no more bets can be placed
@@ -26,6 +26,7 @@ interface ITeamVault {
     /// mapping(bytes32 gameId => VaultWager) public vaultWagers);
 
     /// @notice MarketMakerWager tracks the market makers wager on each game
+    /// @dev Each game's NO token is implemented as part of an ERC1155 token where the token ID is the gameId
     struct MarketMakerWager {
         uint256 noTokens;
         uint256 averagePrice;
@@ -53,4 +54,22 @@ interface ITeamVault {
     /// @notice getSharePrice returns the current price per share of the vault, calculated as total assets under management divided by total shares
     /// outstanding VaultWagers should be priced using the game's getLatestPrice from the oracle
     function getSharePrice() external view returns (uint256);
+
+    /// @notice Returns all registered game IDs for this team vault.
+    function getRegisteredGameIds() external view returns (bytes32[] memory);
+
+    /// @notice Returns the market makers that have NO exposure for a game.
+    function getGameMarketMakers(bytes32 _gameId) external view returns (address[] memory);
+
+    /// @notice Returns the market maker wagers for a list of games.
+    function getMarketMakerWagers(address _maker, bytes32[] calldata _gameIds)
+        external
+        view
+        returns (MarketMakerWager[] memory);
+
+    /// @notice Returns the market makers and their wagers for a game.
+    function getMarketMakerWagersForGame(bytes32 _gameId)
+        external
+        view
+        returns (address[] memory makers, MarketMakerWager[] memory wagers);
 }
