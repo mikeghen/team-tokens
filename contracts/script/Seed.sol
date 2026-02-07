@@ -20,7 +20,8 @@ contract Seed is Script {
         }
 
         // Anvil Account #1
-        uint256 deployerKey = vm.envOr("PRIVATE_KEY", uint256(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80));
+        uint256 deployerKey =
+            vm.envOr("PRIVATE_KEY", uint256(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80));
         address deployer = vm.addr(deployerKey);
 
         oracle = Oracle(vm.envAddress("ORACLE_ADDRESS"));
@@ -30,33 +31,9 @@ contract Seed is Script {
 
         oracle.setReporter(deployer, true);
 
-        _seedGame(
-            "nba-phi-dal-2026-02-10",
-            "PHI",
-            "DAL",
-            uint128(block.timestamp + 3 days),
-            false,
-            4e17,
-            6e17
-        );
-        _seedGame(
-            "nba-nyk-phi-2026-02-11",
-            "NYK",
-            "PHI",
-            uint128(block.timestamp + 4 days),
-            true,
-            45e16,
-            55e16
-        );
-        _seedGame(
-            "nba-phi-bos-2026-02-12",
-            "PHI",
-            "BOS",
-            uint128(block.timestamp + 5 days),
-            false,
-            5e17,
-            5e17
-        );
+        _seedGame("nba-phi-dal-2026-02-10", "PHI", "DAL", uint128(block.timestamp + 3 days), false, 4e17, 6e17);
+        _seedGame("nba-nyk-phi-2026-02-11", "NYK", "PHI", uint128(block.timestamp + 4 days), true, 45e16, 55e16);
+        _seedGame("nba-phi-bos-2026-02-12", "PHI", "BOS", uint128(block.timestamp + 5 days), false, 5e17, 5e17);
 
         vm.stopBroadcast();
     }

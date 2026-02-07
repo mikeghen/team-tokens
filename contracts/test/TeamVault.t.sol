@@ -272,6 +272,7 @@ contract Deposit is TeamVaultTest {
         vm.expectRevert(TeamVault.TeamVault__InvalidAmount.selector);
         vault.deposit(0, 0);
     }
+
     function test_MintsSharesAndTransfersAssets() public {
         uint256 amount = 100e18;
         _deposit(trader, amount);
@@ -317,6 +318,7 @@ contract Withdraw is TeamVaultTest {
         vm.expectRevert(TeamVault.TeamVault__InvalidAmount.selector);
         vault.withdraw(0, 0);
     }
+
     function test_RevertIf_WithdrawalLocked() public {
         _deposit(trader, 100e18);
 
@@ -441,7 +443,9 @@ contract Buy is TeamVaultTest {
         vm.startPrank(maker);
         usdc.approve(address(vault), 10e18);
         vm.expectRevert(
-            abi.encodeWithSelector(TeamVault.TeamVault__MinSharesNotMet.selector, expectedNoTokens, expectedNoTokens + 1)
+            abi.encodeWithSelector(
+                TeamVault.TeamVault__MinSharesNotMet.selector, expectedNoTokens, expectedNoTokens + 1
+            )
         );
         vault.buy(gameId, 10e18, false, expectedNoTokens + 1);
         vm.stopPrank();
@@ -482,6 +486,7 @@ contract Redeem is TeamVaultTest {
         vm.expectRevert(abi.encodeWithSelector(TeamVault.TeamVault__GameNotRegistered.selector, bytes32("missing")));
         vault.redeem(bytes32("missing"), 1e18, 0);
     }
+
     function test_RevertIf_AmountIsZero() public {
         uint128 gameTime = uint128(block.timestamp + 72 hours);
         bytes32 gameId = _registerDefaultGameInVault(gameTime, false);
@@ -499,6 +504,7 @@ contract Redeem is TeamVaultTest {
         vm.expectRevert(TeamVault.TeamVault__GameNotEnded.selector);
         vault.redeem(gameId, 1e18, 0);
     }
+
     function test_RedeemsNoTokensWhenTeamLoses() public {
         uint128 gameTime = uint128(block.timestamp + 72 hours);
         bytes32 gameId = _registerDefaultGameInVault(gameTime, false);
@@ -538,7 +544,9 @@ contract Redeem is TeamVaultTest {
         (uint256 makerTokens,) = vault.marketMakerWagers(gameId, maker);
 
         vm.prank(maker);
-        vm.expectRevert(abi.encodeWithSelector(TeamVault.TeamVault__MinAmountNotMet.selector, makerTokens, makerTokens + 1));
+        vm.expectRevert(
+            abi.encodeWithSelector(TeamVault.TeamVault__MinAmountNotMet.selector, makerTokens, makerTokens + 1)
+        );
         vault.redeem(gameId, makerTokens, makerTokens + 1);
     }
 

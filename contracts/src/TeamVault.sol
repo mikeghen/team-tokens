@@ -176,7 +176,8 @@ contract TeamVault is ERC20, Ownable, ITeamVault {
         usdcSold[_gameId] += _amount;
 
         _wager.noTokensSold += _noTokens;
-        _wager.averageNoPrice = _weightedAveragePrice(_wager.averageNoPrice, _wager.noTokensSold - _noTokens, _price, _noTokens);
+        _wager.averageNoPrice =
+            _weightedAveragePrice(_wager.averageNoPrice, _wager.noTokensSold - _noTokens, _price, _noTokens);
 
         MarketMakerWager storage _makerWager = marketMakerWagers[_gameId][msg.sender];
         if (!isMarketMakerForGame[_gameId][msg.sender]) {
@@ -184,12 +185,8 @@ contract TeamVault is ERC20, Ownable, ITeamVault {
             gameMarketMakers[_gameId].push(msg.sender);
         }
         _makerWager.noTokens += _noTokens;
-        _makerWager.averagePrice = _weightedAveragePrice(
-            _makerWager.averagePrice,
-            _makerWager.noTokens - _noTokens,
-            _price,
-            _noTokens
-        );
+        _makerWager.averagePrice =
+            _weightedAveragePrice(_makerWager.averagePrice, _makerWager.noTokens - _noTokens, _price, _noTokens);
 
         emit Buy(msg.sender, _gameId, _amount, _noTokens, _price);
     }

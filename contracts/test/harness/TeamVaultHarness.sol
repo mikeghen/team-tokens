@@ -8,11 +8,7 @@ contract TeamVaultHarness is TeamVault {
         TeamVault(_owner, _oracle, _usdc, _teamSymbol)
     {}
 
-    function exposed_availableUsdcToSell(uint128 _gameTime, uint256 _usdcAmountForBet)
-        external
-        view
-        returns (uint256)
-    {
+    function exposed_availableUsdcToSell(uint128 _gameTime, uint256 _usdcAmountForBet) external view returns (uint256) {
         return _availableUsdcToSell(_gameTime, _usdcAmountForBet);
     }
 
@@ -53,8 +49,11 @@ contract TeamVaultHarness is TeamVault {
         lastRateAssets = _assets;
     }
 
-    function exposed_setVaultWager(bytes32 _gameId, uint256 _usdcAmount, uint256 _noTokens, uint256 _avgPrice) external {
-        vaultWagers[_gameId] = VaultWager({usdcAmountForBet: _usdcAmount, noTokensSold: _noTokens, averageNoPrice: _avgPrice});
+    function exposed_setVaultWager(bytes32 _gameId, uint256 _usdcAmount, uint256 _noTokens, uint256 _avgPrice)
+        external
+    {
+        vaultWagers[_gameId] =
+            VaultWager({usdcAmountForBet: _usdcAmount, noTokensSold: _noTokens, averageNoPrice: _avgPrice});
     }
 
     function exposed_setGameInfo(bytes32 _gameId, uint128 _gameTime, bool _isRegistered, bool _isHomeTeam) external {
