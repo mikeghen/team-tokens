@@ -24,6 +24,8 @@ How it works:
 - Admin registers games; all other actions are permissionless.
 - Intent-based flow avoids direct prediction market integration.
 
+
+
 ## Sports Oracle
 - Tracks the current YES/NO price for each game based on its game slug (e.g., nba-phi-atl-2026-01-31)
 - Provides prices to the Unexpected Sports contracts to settle games
@@ -77,6 +79,13 @@ How it works:
 
 ## Formulas
 - Per game bet amount as a function of time to game
+    ```solidity
+    uint256 fractionToBet = 2%
+    uint256 vaultPrincipal = _totalAssets()
+    uint256 maxUsdcExposure = (vaultPrincipal * fractionToBet) / 1e18
+    uint256 noTokensForSale = (maxUsdcExposure * 1e18) / noPrice
+
+    ```
 
 ## Interfaces
 
@@ -96,3 +105,8 @@ How it works:
   - Market Makers
     - Buy (gameId, amount, isYes, minShares)
     - Redeem (gameId, shares, minAmount)
+
+
+## Season life cycle
+- Optionally only allow withdrawals after the season finishes, solves the scaling down issue.
+- Always allow deposits, increasing the fund is not an issue
