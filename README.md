@@ -1,7 +1,7 @@
 # Unexpected Sports Market
 Prediction Market Derivative Tracking Sports Teams' Performance.
 
-![Unexpected Sports Market](./UnexpectedSportsMarket.png)
+![Unexpected Sports Market](./images/UnexpectedSportsMarket.png)
 
 # Back Test Results
 Unexpected Sports uses a simple function for determining the fraction to bet on each game for a team. Unexpected Sports vaults will bet 2% of their funds on each game for a given team. In this way, a deriviate tracks the performance autonomously over the course of time in a simple to understand way. The backtest below shows how this would perform on this NBA 2025-26 season.
