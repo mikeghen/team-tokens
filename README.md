@@ -19,12 +19,6 @@ Unexpected Sports creates a **new financial primitive**: tokenized vaults that g
 3. **DCA Entry Strategy** — Streaming the bet over 48 hours reduces slippage and front-running risk.
 4. **On-Chain Sports Oracle** — As a side effect, the protocol creates a permissionless, on-chain oracle for moneyline probability data that any other contract can consume.
 
-## Backtest Results
-
-We backtested the 2% fixed-bet strategy against real Polymarket price data for every NBA team in the 2025–26 season. Starting with $10,000, the chart below shows how each team's vault would have performed:
-
-![Backtest Results](./images/backtest_results.png)
-
 ## Problem
 
 Prediction markets let you bet on individual games, but there is no easy way to get **season-long financial exposure** to a team's performance. Today you have to:
@@ -53,6 +47,16 @@ The result is a **derivative token** whose price:
   - This makes it a derivative to support leveraged sports betting
 - **Long term:** Outperforms if the team has an unexpectedly good season
   - This makes it a non-correlated asset to be added to investment portfolios
+
+### Validating the Derivative's Performace
+
+We backtested the 2% fixed-bet strategy against real Polymarket price data for every NBA team in the 2025–26 season. Starting with $10,000, the chart below shows how each team's vault would have performed:
+
+The results reveal that simply having a winning season isn't enough to guarentee returns. The prediction market moneyline odds make it so a team must have an **UNEXPECTEDLY** good (bad) season to see a positive (negative) return. "Blue Chip" teams that do well and are _expected to do well_ would not nessecarily see long term appreciation in the asset. However, it still holds in the short term if a team wins, its share price appreciates which.
+
+![Backtest Results](./images/backtest_results.png)
+
+
 
 ## Architecture
 
