@@ -3,6 +3,15 @@ pragma solidity ^0.8.13;
 
 /// @title Unexpected Sports Team Vault Interface
 interface ITeamVault {
+    // Game Life Cycle:
+    // 1. Owner registers a game with the oracle and adds it to the vault
+    // 2. Traders can deposit into the vault and receive shares
+    // 3. Owner checkpoints the game 72 hours before its start time to record the usdcAmountForBet
+    // 4. Based on the amount to wager, we compute how many YES tokens we could buy at the current price (as long as its within a certain percentage of the getTwapPrice)
+    // 5. Market Makers then buy NO tokens, 1 NO token is available for each YES token the vault will want to buy with the usdcAmountForBet.
+    // 6. The game starts, no more bets can be placed
+    // 7. The game ends, the team wins means we keep the proceeds of the NO tokens we sold; if the team loses, the Market Makers can redeem their NO tokens for USDC from the vault.
+
     /// @notice GameWager tracks the vaults wager on each game
     /// @param usdcAmountForBet USDC amount escrowed for the bet
     /// @param noTokensSold NO Tokens sold for the bet, 1 USDC per 1 NO Token sold
