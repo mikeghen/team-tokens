@@ -1,5 +1,19 @@
 # Unexpected Sports Market Frontend
 
+
+The frontend application should have the following pages:
+
+1. A home page that shows the TeamVault tokens share price overtime, this is the landing page for the application, which is designed to show information about a TeamVault. For our purposes, use PHI and game slugs like we use in the tests.
+
+2. A Game list page showing all the games as well as the aggregate information about the USDC amount bet, the NO tokens sold, the latest price of the NO token, the PnL for the game, and the number of market makers participating. This would show all the vaults' wagers (VaultWager).
+
+3. A Game View Page that will show the price overtime for a specific game, read from the oracle contract. This would show a vault's wager and price history. Includes an option for the connected account to buy the NO tokens for this specific game, if any are available for sale.
+
+4. A Market Maker Wager List view that shows any wagers the market market account has opened, along with the latest price and pnl for them
+
+5. A Market Maker Wager View that shows the details for a specific wager the market maker has made as well as a button to redeem the tokens from the Team Vault contract. 
+
+
 ## All Tokens View
 - Line chart shows the performance of each team over the course of the season using the 2% automated betting strategy
 - Table veiw below it shows % performance per team as well as game performance (wins/losses)
