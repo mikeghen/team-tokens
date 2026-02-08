@@ -67,6 +67,16 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
+  const latestPrice = priceNumber;
+  const previousPrice =
+    chartData.length > 1 ? chartData[chartData.length - 2].value : priceNumber;
+  const priceChange = latestPrice - previousPrice;
+  const priceChangePct = previousPrice !== 0 ? (priceChange / previousPrice) * 100 : 0;
+  const priceChangePrefix = priceChange > 0 ? "+" : priceChange < 0 ? "-" : "";
+  const priceChangeValue = `${priceChangePrefix}${formatUSD(Math.abs(priceChange))}`;
+  const priceChangePctValue = `${priceChangePrefix}${Math.abs(priceChangePct).toFixed(2)}%`;
+  const priceChangeColor = priceChange > 0 ? colors.success : priceChange < 0 ? colors.error : colors.text;
+
   if (loading) return <LoadingScreen />;
 
   return (
@@ -84,28 +94,6 @@ export default function HomeScreen() {
         <Text style={styles.sharePrice}>{formatUSD(priceNumber)}</Text>
         <Text style={styles.sharePriceLabel}>Share Price</Text>
       </View>
-
-      {/* Chart */}
-      <PriceChart
-        data={chartData}
-        title="Share Price History"
-        yLabel="USD"
-        height={220}
-        color={colors.accent}
-      />
-
-      {/* Stats Row */}
-      <Card style={styles.statsCard}>
-        <View style={styles.statsRow}>
-          <StatBox label="Total Supply" value={formatUnits(totalSupply)} />
-          <StatBox label="Games" value={String(gameCount)} />
-          <StatBox
-            label="Share Price"
-            value={formatUSD(priceNumber)}
-            color={colors.accent}
-          />
-        </View>
-      </Card>
 
       {/* User Info */}
       {isConnected && address ? (
@@ -130,6 +118,16 @@ export default function HomeScreen() {
               )}
             </Text>
           </View>
+          <View style={styles.positionRow}>
+            <Text style={styles.positionLabel}>Current Share Price</Text>
+            <Text style={styles.positionValue}>{formatUSD(priceNumber)}</Text>
+          </View>
+          <View style={[styles.positionRow, styles.positionRowLast]}>
+            <Text style={styles.positionLabel}>24h Change</Text>
+            <Text style={[styles.positionValue, { color: priceChangeColor }]}>
+              {priceChangeValue} ({priceChangePctValue})
+            </Text>
+          </View>
         </Card>
       ) : (
         <Card style={styles.connectPrompt}>
@@ -139,6 +137,28 @@ export default function HomeScreen() {
           </Text>
         </Card>
       )}
+
+      {/* Chart */}
+      <PriceChart
+        data={chartData}
+        title="Share Price History"
+        yLabel="USD"
+        height={220}
+        color={colors.accent}
+      />
+
+      {/* Stats Row */}
+      <Card style={styles.statsCard}>
+        <View style={styles.statsRow}>
+          <StatBox label="Total Supply" value={formatUnits(totalSupply)} />
+          <StatBox label="Games" value={String(gameCount)} />
+          <StatBox
+            label="Share Price"
+            value={formatUSD(priceNumber)}
+            color={colors.accent}
+          />
+        </View>
+      </Card>
 
       {/* Contract Info */}
       <Card title="Contract Details" style={styles.contractCard}>
@@ -218,6 +238,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  positionRowLast: {
+    borderBottomWidth: 0,
   },
   positionLabel: {
     color: colors.textSecondary,

@@ -1,2 +1,4 @@
 .github/instructions/**
 */lcov.info
+*price_history.db
+*seed_data.csv
